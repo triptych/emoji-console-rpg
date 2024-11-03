@@ -18,6 +18,9 @@ export class InputHandler {
 
         this.setupKeyboardControls();
         this.setupButtonControls();
+
+        // Debug: Log when instance is created
+        console.log('InputHandler initialized');
     }
 
     setupKeyboardControls = () => {
@@ -39,6 +42,7 @@ export class InputHandler {
             if (key) {
                 e.preventDefault();
                 this.keys[key] = true;
+                console.log('Key pressed:', e.key); // Debug log
             }
         });
 
@@ -47,6 +51,7 @@ export class InputHandler {
             if (key) {
                 e.preventDefault();
                 this.keys[key] = false;
+                console.log('Key released:', e.key); // Debug log
             }
         });
     }
@@ -71,6 +76,7 @@ export class InputHandler {
                 button.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     this.keys[key] = true;
+                    console.log('Button touched:', key); // Debug log
                 });
                 button.addEventListener('touchend', (e) => {
                     e.preventDefault();
@@ -79,6 +85,7 @@ export class InputHandler {
                 button.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     this.keys[key] = true;
+                    console.log('Button clicked:', key); // Debug log
                 });
                 button.addEventListener('mouseup', (e) => {
                     e.preventDefault();
@@ -87,6 +94,8 @@ export class InputHandler {
                 button.addEventListener('mouseleave', () => {
                     this.keys[key] = false;
                 });
+            } else {
+                console.warn(`Button not found: ${selector}`); // Debug warning
             }
         });
     }

@@ -40,6 +40,12 @@ body {
     aspect-ratio: 160/144;
     background-color: var(--screen-color);
     image-rendering: pixelated;
+    cursor: pointer;
+    outline: none; /* Remove focus outline */
+}
+
+#gameCanvas:focus {
+    border: 2px solid #ffffff;
 }
 
 .controls {
@@ -64,6 +70,7 @@ body {
     border-radius: 5px;
     color: white;
     cursor: pointer;
+    user-select: none;
 }
 
 .d-pad .up { top: 0; left: 40px; }
@@ -86,6 +93,7 @@ body {
     color: white;
     transform: rotate(-25deg);
     cursor: pointer;
+    user-select: none;
 }
 
 .action-buttons {
@@ -103,6 +111,7 @@ body {
     border-radius: 50%;
     color: white;
     cursor: pointer;
+    user-select: none;
 }
 
 .action-buttons .y { top: 0; left: 40px; }
@@ -113,6 +122,10 @@ body {
 button:active {
     transform: scale(0.95);
     background: #1a1a1a;
+}
+
+.menu-buttons button:active {
+    transform: rotate(-25deg) scale(0.95);
 }
 
 @media (max-width: 400px) {

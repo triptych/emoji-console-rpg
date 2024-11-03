@@ -13,6 +13,7 @@ class Game {
 
         this.gameState = new GameState();
         this.renderer = new Renderer(this.ctx);
+        this.renderer.setGameState(this.gameState);
         this.input = new InputHandler();
         this.mapManager = new MapManager();
         this.player = new Player();
@@ -20,6 +21,17 @@ class Game {
 
         this.lastTime = 0;
         this.battleChance = 0.1; // 10% chance of battle when walking on grass
+
+        // Ensure canvas has focus for keyboard input
+        this.canvas.tabIndex = 1;
+        this.canvas.focus();
+        this.canvas.addEventListener('click', () => this.canvas.focus());
+
+        // Load saved game if exists
+        if (this.gameState.loadGame()) {
+            this.gameState.setState('EXPLORING');
+        }
+
         this.init();
     }
 
@@ -50,25 +62,31 @@ class Game {
     update = (deltaTime) => {
         const input = this.input.getInput();
 
-        // Handle START button for menu - only toggle on button press, not hold
-        if (input.startPressed) {
-            this.gameState.toggleMenu();
-        }
-
         switch(this.gameState.currentState) {
+            case 'SPLASH':
+                this.gameState.splashAnimationFrame++;
+                if (input.aPressed || input.startPressed) {
+                    console.log('Starting game...');
+                    this.gameState.setState('EXPLORING');
+                }
+                break;
+
             case 'EXPLORING':
+                if (input.startPressed) {
+                    this.gameState.toggleMenu();
+                    break;
+                }
+
                 const oldX = this.player.x;
                 const oldY = this.player.y;
 
                 this.player.update(deltaTime, input);
 
-                // Check collision after movement
-                if (this.mapManager.isCollision(this.player.x, this.player.y)) {
+                if (this.mapManager.isCollision(this.player.x * 16, this.player.y * 16)) {
                     this.player.x = oldX;
                     this.player.y = oldY;
                 }
 
-                // Check for battle trigger if position changed
                 if (oldX !== this.player.x || oldY !== this.player.y) {
                     this.checkBattleTrigger();
                 }
@@ -77,7 +95,7 @@ class Game {
                 break;
 
             case 'BATTLE':
-                this.battleSystem.update(deltaTime, input);
+                this.battleSystem.update(deltaTime, input, this.gameState);
                 if (!this.battleSystem.inBattle) {
                     this.gameState.setState('EXPLORING');
                 }
@@ -100,18 +118,63 @@ class Game {
         }
     }
 
+    renderSplashScreen = () => {
+        const ctx = this.ctx;
+        ctx.fillStyle = '#9bbc0f';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Calculate animation progress (0 to 1)
+        const progress = Math.min(1, (Date.now() - this.gameState.splashStartTime) / 2000);
+
+        // Animated title
+        ctx.fillStyle = '#0f380f';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'center';
+
+        // Apply bounce effect
+        const bounce = Math.sin(progress * Math.PI) * (1 - progress) * 10;
+        const y = 50 + bounce;
+
+        ctx.fillText('Emoji Game', this.canvas.width / 2, y);
+        ctx.fillText('System', this.canvas.width / 2, y + 20);
+
+        // Fade in press start text
+        if (progress > 0.5) {
+            const alpha = Math.min(1, (progress - 0.5) * 2);
+            ctx.fillStyle = `rgba(15, 56, 15, ${alpha})`;
+            ctx.font = '8px monospace';
+            ctx.fillText('PRESS START', this.canvas.width / 2, 100);
+        }
+
+        // Draw decorative emoji
+        const emoji = ['🎮', '🎲', '🎯', '🎪'];
+        emoji.forEach((e, i) => {
+            const angle = (progress * Math.PI * 2) + (i * Math.PI / 2);
+            const x = this.canvas.width / 2 + Math.cos(angle) * 40;
+            const y = 72 + Math.sin(angle) * 20;
+            ctx.font = '16px serif';
+            ctx.fillText(e, x, y);
+        });
+    }
+
     render = () => {
         this.ctx.fillStyle = '#9bbc0f';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         switch(this.gameState.currentState) {
+            case 'SPLASH':
+                this.renderSplashScreen();
+                break;
+
             case 'EXPLORING':
                 this.mapManager.render(this.renderer);
                 this.player.render(this.renderer);
                 break;
+
             case 'BATTLE':
                 this.battleSystem.render(this.renderer);
                 break;
+
             case 'MENU':
                 // Render the game world behind the menu
                 this.mapManager.render(this.renderer);

@@ -1,0 +1,131 @@
+:root {
+    --gameboy-gray: #8b8b8b;
+    --gameboy-dark: #2c2c2c;
+    --screen-color: #9bbc0f;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    font-family: sans-serif;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 400px;
+    background-color: var(--gameboy-gray);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.game-screen {
+    background-color: var(--gameboy-dark);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+#gameCanvas {
+    width: 100%;
+    aspect-ratio: 160/144;
+    background-color: var(--screen-color);
+    image-rendering: pixelated;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    padding: 10px;
+}
+
+.d-pad {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.d-pad button {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: var(--gameboy-dark);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+}
+
+.d-pad .up { top: 0; left: 40px; }
+.d-pad .right { top: 40px; right: 0; }
+.d-pad .down { bottom: 0; left: 40px; }
+.d-pad .left { top: 40px; left: 0; }
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.menu-buttons button {
+    padding: 5px 10px;
+    background: var(--gameboy-dark);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    transform: rotate(-25deg);
+    cursor: pointer;
+}
+
+.action-buttons {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.action-buttons button {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: var(--gameboy-dark);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+}
+
+.action-buttons .y { top: 0; left: 40px; }
+.action-buttons .x { top: 40px; right: 0; }
+.action-buttons .a { bottom: 0; left: 40px; }
+.action-buttons .b { top: 40px; left: 0; }
+
+button:active {
+    transform: scale(0.95);
+    background: #1a1a1a;
+}
+
+@media (max-width: 400px) {
+    .game-container {
+        border-radius: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .game-screen {
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+}

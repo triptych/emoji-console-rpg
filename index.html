@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji RPG</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-screen">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        <div class="controls">
+            <div class="d-pad">
+                <button class="up">⬆️</button>
+                <button class="right">➡️</button>
+                <button class="down">⬇️</button>
+                <button class="left">⬅️</button>
+            </div>
+            <div class="menu-buttons">
+                <button class="select">SELECT</button>
+                <button class="start">START</button>
+            </div>
+            <div class="action-buttons">
+                <button class="y">Y</button>
+                <button class="x">X</button>
+                <button class="a">A</button>
+                <button class="b">B</button>
+            </div>
+        </div>
+    </div>
+    <!-- Add error container -->
+    <div id="error-container" style="display: none; color: red; padding: 10px;"></div>
+    <!-- Load main script as module -->
+    <script type="module" src="js/main.js"></script>
+    <!-- Add fallback for module loading error -->
+    <script nomodule>
+        document.getElementById('error-container').style.display = 'block';
+        document.getElementById('error-container').textContent =
+            'Your browser does not support JavaScript modules. Please use a modern browser.';
+    </script>
+</body>
+</html>

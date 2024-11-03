@@ -2,6 +2,9 @@ export class Renderer {
     constructor(ctx) {
         this.ctx = ctx;
         this.gameState = null; // Will be set by main game
+        // Calculate offsets based on canvas dimensions (160x144)
+        this.offsetX = (160 - (8 * 16)) / 2; // Assuming 8 tiles width
+        this.offsetY = (144 - (8 * 16)) / 2; // Assuming 8 tiles height
     }
 
     setGameState(gameState) {
@@ -10,12 +13,12 @@ export class Renderer {
 
     drawCharacter(emoji, x, y, size = 16) {
         this.ctx.font = `${size}px serif`;
-        this.ctx.fillText(emoji, x, y);
+        this.ctx.fillText(emoji, x + this.offsetX, y + this.offsetY);
     }
 
     drawTile(emoji, x, y, size = 16) {
         this.ctx.font = `${size}px serif`;
-        this.ctx.fillText(emoji, x * size, y * size + size);
+        this.ctx.fillText(emoji, x * size + this.offsetX, y * size + this.offsetY);
     }
 
     drawText(text, x, y, size = 16) {

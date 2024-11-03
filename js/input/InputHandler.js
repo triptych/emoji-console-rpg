@@ -37,21 +37,22 @@ export class InputHandler {
             'Shift': 'select'
         };
 
-        window.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', (e) => {
+            console.log('Keydown event:', e.key); // Debug log
             const key = keyMap[e.key];
             if (key) {
                 e.preventDefault();
                 this.keys[key] = true;
-                console.log('Key pressed:', e.key); // Debug log
+                console.log('Key pressed:', key, this.keys); // Debug log with state
             }
         });
 
-        window.addEventListener('keyup', (e) => {
+        document.addEventListener('keyup', (e) => {
             const key = keyMap[e.key];
             if (key) {
                 e.preventDefault();
                 this.keys[key] = false;
-                console.log('Key released:', e.key); // Debug log
+                console.log('Key released:', key, this.keys); // Debug log with state
             }
         });
     }
@@ -115,6 +116,11 @@ export class InputHandler {
             startPressed: this.keys.start && !this.previousKeys.start,
             selectPressed: this.keys.select && !this.previousKeys.select
         };
+
+        // Debug log for pressed states
+        if (Object.values(input).some(v => v)) {
+            console.log('Current input state:', input);
+        }
 
         // Update previous keys state
         Object.keys(this.keys).forEach(key => {

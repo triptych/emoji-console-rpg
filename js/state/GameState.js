@@ -3,6 +3,7 @@ export class GameState {
         this.currentState = 'SPLASH'; // SPLASH, EXPLORING, BATTLE, MENU
         this.splashAnimationFrame = 0;
         this.splashStartTime = Date.now();
+        this.hasSaveGame = this.checkSaveExists();
         this.player = {
             position: { x: 0, y: 0 },
             stats: {
@@ -31,11 +32,17 @@ export class GameState {
         this.menuOpen = false;
         this.menuOptions = ['Items 🎒', 'Status 📊', 'Save 💾', 'Exit ❌'];
         this.selectedMenuOption = 0;
+        this.lastMenuMove = 0;
+        this.menuMoveDelay = 200; // Milliseconds between menu movements
         this.inventory = [
             { name: '🧪 Potion', type: 'heal', power: 20, quantity: 3 },
             { name: '⚡ Ether', type: 'mp', power: 10, quantity: 2 },
             { name: '🌟 Elixir', type: 'full', power: 0, quantity: 1 }
         ];
+    }
+
+    checkSaveExists = () => {
+        return localStorage.getItem('rpgSaveData') !== null;
     }
 
     setState = (newState) => {
@@ -56,11 +63,19 @@ export class GameState {
     }
 
     selectNextMenuOption = () => {
-        this.selectedMenuOption = (this.selectedMenuOption + 1) % this.menuOptions.length;
+        const currentTime = performance.now();
+        if (currentTime - this.lastMenuMove > this.menuMoveDelay) {
+            this.selectedMenuOption = (this.selectedMenuOption + 1) % this.menuOptions.length;
+            this.lastMenuMove = currentTime;
+        }
     }
 
     selectPreviousMenuOption = () => {
-        this.selectedMenuOption = (this.selectedMenuOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+        const currentTime = performance.now();
+        if (currentTime - this.lastMenuMove > this.menuMoveDelay) {
+            this.selectedMenuOption = (this.selectedMenuOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+            this.lastMenuMove = currentTime;
+        }
     }
 
     useItem = (itemIndex, target) => {

@@ -4,9 +4,11 @@ import { InputHandler } from './input/InputHandler.js';
 import { MapManager } from './world/MapManager.js';
 import { Player } from './entities/Player.js';
 import { BattleSystem } from './battle/BattleSystem.js';
+import { Monster } from './entities/Monster.js';
 
 class Game {
     constructor() {
+        console.log('Game initializing...');
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.setupCanvas();
@@ -19,18 +21,22 @@ class Game {
         this.player = new Player();
         this.battleSystem = new BattleSystem();
 
+        // Initialize monsters
+        this.monsters = [
+            new Monster(5, 5, '👻', 'Ghost', 2, 15, 15),
+            new Monster(8, 3, '🐉', 'Dragon', 3, 20, 20),
+            new Monster(3, 7, '🧟', 'Zombie', 1, 10, 10)
+        ];
+
         this.lastTime = 0;
-        this.battleChance = 0.1; // 10% chance of battle when walking on grass
 
         // Ensure canvas has focus for keyboard input
         this.canvas.tabIndex = 1;
         this.canvas.focus();
-        this.canvas.addEventListener('click', () => this.canvas.focus());
-
-        // Load saved game if exists
-        if (this.gameState.loadGame()) {
-            this.gameState.setState('EXPLORING');
-        }
+        this.canvas.addEventListener('click', () => {
+            console.log('Canvas clicked, focusing...');
+            this.canvas.focus();
+        });
 
         this.init();
     }
@@ -42,21 +48,22 @@ class Game {
     }
 
     init = () => {
+        console.log('Game initialized, starting game loop');
         this.gameLoop();
     }
 
-    checkBattleTrigger = () => {
-        const currentTile = this.mapManager.getTile(this.player.x, this.player.y);
-        if (currentTile === '🌱' && Math.random() < this.battleChance) {
-            this.gameState.setState('BATTLE');
-            this.battleSystem.startBattle({
-                emoji: '👾',
-                name: 'Wild Monster',
-                level: 1,
-                hp: 10,
-                maxHp: 10
-            });
+    checkMonsterCollision = () => {
+        for (let monster of this.monsters) {
+            if (monster.x === this.player.x && monster.y === this.player.y) {
+                console.log('Monster collision!');
+                this.gameState.setState('BATTLE');
+                this.battleSystem.startBattle(monster.getBattleStats());
+                // Remove the monster after starting battle
+                this.monsters = this.monsters.filter(m => m !== monster);
+                return true;
+            }
         }
+        return false;
     }
 
     update = (deltaTime) => {
@@ -66,13 +73,17 @@ class Game {
             case 'SPLASH':
                 this.gameState.splashAnimationFrame++;
                 if (input.aPressed || input.startPressed) {
-                    console.log('Starting game...');
+                    console.log('Input detected on splash screen, transitioning to EXPLORING');
+                    if (this.gameState.hasSaveGame) {
+                        this.gameState.loadGame();
+                    }
                     this.gameState.setState('EXPLORING');
                 }
                 break;
 
             case 'EXPLORING':
                 if (input.startPressed) {
+                    console.log('Opening menu');
                     this.gameState.toggleMenu();
                     break;
                 }
@@ -87,8 +98,13 @@ class Game {
                     this.player.y = oldY;
                 }
 
+                // Update monsters
+                for (let monster of this.monsters) {
+                    monster.update(deltaTime, this.mapManager);
+                }
+
                 if (oldX !== this.player.x || oldY !== this.player.y) {
-                    this.checkBattleTrigger();
+                    this.checkMonsterCollision();
                 }
 
                 this.mapManager.update(deltaTime);
@@ -97,7 +113,35 @@ class Game {
             case 'BATTLE':
                 this.battleSystem.update(deltaTime, input, this.gameState);
                 if (!this.battleSystem.inBattle) {
+                    console.log('Battle ended, returning to exploration');
                     this.gameState.setState('EXPLORING');
+                    // Spawn a new monster to replace the defeated one
+                    if (this.monsters.length < 3) {
+                        const positions = [
+                            {x: 5, y: 5}, {x: 8, y: 3}, {x: 3, y: 7},
+                            {x: 6, y: 4}, {x: 4, y: 6}, {x: 7, y: 5}
+                        ];
+                        const monsterTypes = [
+                            {emoji: '👻', name: 'Ghost', level: 2},
+                            {emoji: '🐉', name: 'Dragon', level: 3},
+                            {emoji: '🧟', name: 'Zombie', level: 1},
+                            {emoji: '🦇', name: 'Bat', level: 1},
+                            {emoji: '🐺', name: 'Wolf', level: 2}
+                        ];
+
+                        // Find a position that's not occupied by other monsters or the player
+                        const validPositions = positions.filter(pos => {
+                            return !this.monsters.some(m => m.x === pos.x && m.y === pos.y) &&
+                                   !(this.player.x === pos.x && this.player.y === pos.y);
+                        });
+
+                        if (validPositions.length > 0) {
+                            const pos = validPositions[Math.floor(Math.random() * validPositions.length)];
+                            const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
+                            const hp = 10 + (type.level * 5);
+                            this.monsters.push(new Monster(pos.x, pos.y, type.emoji, type.name, type.level, hp, hp));
+                        }
+                    }
                 }
                 break;
 
@@ -109,9 +153,11 @@ class Game {
                     this.gameState.selectNextMenuOption();
                 }
                 if (input.aPressed) {
+                    console.log('Executing menu option:', this.gameState.menuOptions[this.gameState.selectedMenuOption]);
                     this.gameState.executeMenuOption();
                 }
                 if (input.bPressed) {
+                    console.log('Closing menu');
                     this.gameState.toggleMenu();
                 }
                 break;
@@ -144,6 +190,11 @@ class Game {
             ctx.fillStyle = `rgba(15, 56, 15, ${alpha})`;
             ctx.font = '8px monospace';
             ctx.fillText('PRESS START', this.canvas.width / 2, 100);
+
+            // Show "Continue" text if save exists
+            if (this.gameState.hasSaveGame) {
+                ctx.fillText('(SAVE DATA EXISTS)', this.canvas.width / 2, 110);
+            }
         }
 
         // Draw decorative emoji
@@ -168,6 +219,10 @@ class Game {
 
             case 'EXPLORING':
                 this.mapManager.render(this.renderer);
+                // Render monsters
+                for (let monster of this.monsters) {
+                    monster.render(this.renderer);
+                }
                 this.player.render(this.renderer);
                 break;
 
@@ -178,25 +233,54 @@ class Game {
             case 'MENU':
                 // Render the game world behind the menu
                 this.mapManager.render(this.renderer);
+                for (let monster of this.monsters) {
+                    monster.render(this.renderer);
+                }
                 this.player.render(this.renderer);
 
-                // Render semi-transparent menu background
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                this.ctx.fillRect(10, 10, 140, 80);
+                // Render semi-transparent menu background with larger size
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                this.ctx.fillRect(5, 5, 150, 100);
 
-                // Render menu options
+                // Add menu border
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(5, 5, 150, 100);
+
+                // Render menu options with better spacing and contrast
                 this.gameState.menuOptions.forEach((option, index) => {
                     const isSelected = index === this.gameState.selectedMenuOption;
+
+                    // Draw selection highlight
+                    if (isSelected) {
+                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                        this.ctx.fillRect(10, 10 + (index * 20), 140, 18);
+                    }
+
+                    // Draw text with shadow for better readability
+                    this.ctx.fillStyle = '#000000';
                     this.renderer.drawText(
                         `${isSelected ? '▶️ ' : '  '}${option}`,
-                        20,
-                        20 + (index * 15),
-                        10
+                        11,
+                        25 + (index * 20),
+                        12
+                    );
+                    this.ctx.fillStyle = '#ffffff';
+                    this.renderer.drawText(
+                        `${isSelected ? '▶️ ' : '  '}${option}`,
+                        10,
+                        24 + (index * 20),
+                        12
                     );
                 });
 
-                // Render controls hint
-                this.renderer.drawText('🅰️:Select 🅱️:Back', 20, 120, 8);
+                // Render controls hint at the bottom
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                this.ctx.fillRect(5, 110, 150, 20);
+                this.ctx.strokeRect(5, 110, 150, 20);
+
+                this.ctx.fillStyle = '#ffffff';
+                this.renderer.drawText('🅰️:Select 🅱️:Back', 10, 124, 10);
                 break;
         }
     }
@@ -213,5 +297,6 @@ class Game {
 }
 
 window.addEventListener('load', () => {
+    console.log('Window loaded, creating game instance');
     new Game();
 });

@@ -25,7 +25,10 @@ export class BattleSystem {
         this.battleMenu.selectedIndex = 0;
         this.magicMenu.active = false;
         this.itemMenu.active = false;
-        this.battleLog = ['A wild ' + enemy.name + ' appears!'];
+        this.battleLog = [
+            'A wild ' + enemy.name + ' appears!',
+            'Select action with ⬆️⬇️'
+        ];
     }
 
     update = (deltaTime, input, gameState) => {
@@ -85,6 +88,7 @@ export class BattleSystem {
         }
         if (input.bPressed) {
             this.magicMenu.active = false;
+            this.battleLog.push('Select action with ⬆️⬇️');
         }
     }
 
@@ -93,6 +97,7 @@ export class BattleSystem {
         if (items.length === 0) {
             this.battleLog.push('No items!');
             this.itemMenu.active = false;
+            this.battleLog.push('Select action with ⬆️⬇️');
             return;
         }
 
@@ -113,6 +118,7 @@ export class BattleSystem {
         }
         if (input.bPressed) {
             this.itemMenu.active = false;
+            this.battleLog.push('Select action with ⬆️⬇️');
         }
     }
 
@@ -151,6 +157,7 @@ export class BattleSystem {
             const damage = 2;
             gameState.player.stats.hp -= damage;
             this.battleLog.push(`Enemy dealt ${damage} damage!`);
+            this.battleLog.push('Select action with ⬆️⬇️');
 
             if (gameState.player.stats.hp <= 0) {
                 this.endBattle(false);
@@ -161,11 +168,15 @@ export class BattleSystem {
     openMagicMenu = () => {
         this.magicMenu.active = true;
         this.magicMenu.selectedIndex = 0;
+        this.battleLog.push('Select a spell');
+        this.battleLog.push('Use ⬆️⬇️ and Z');
     }
 
     openItemMenu = () => {
         this.itemMenu.active = true;
         this.itemMenu.selectedIndex = 0;
+        this.battleLog.push('Select an item');
+        this.battleLog.push('Use ⬆️⬇️ and Z');
     }
 
     attemptRun = (gameState) => {
@@ -218,21 +229,27 @@ export class BattleSystem {
         renderer.ctx.fillRect(8, 88, 60, 24);
         renderer.drawStats(10, 100);
 
-        // Draw battle log background
+        // Draw battle log background with more width
         renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        renderer.ctx.fillRect(8, 10, 140, 30);
+        renderer.ctx.fillRect(15, 10, 130, 30);
 
-        // Draw last two battle log messages
+        // Draw last two battle log messages with adjusted position
         const lastMessages = this.battleLog.slice(-2);
         lastMessages.forEach((msg, i) => {
             renderer.ctx.fillStyle = '#ffffff';
-            renderer.drawText(msg, 10, 15 + (i * 12), 8);
+            renderer.drawText(msg, 20, 20 + (i * 12), 8);
         });
+
+        // Draw controls hint at the bottom with adjusted position
+        renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        renderer.ctx.fillRect(15, 115, 130, 20);
+        renderer.ctx.fillStyle = '#ffffff';
+        renderer.drawText('⬆️⬇️:Select  Z:OK  X:Back', 20, 127, 8);
 
         if (this.magicMenu.active) {
             // Draw magic menu
             renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            renderer.ctx.fillRect(80, 70, 75, 70);
+            renderer.ctx.fillRect(80, 45, 75, 70);
 
             renderer.gameState.player.spells.forEach((spell, index) => {
                 const isSelected = index === this.magicMenu.selectedIndex;
@@ -240,20 +257,20 @@ export class BattleSystem {
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${spell.name}`,
                     85,
-                    80 + (index * 15),
+                    55 + (index * 15),
                     10
                 );
                 renderer.drawText(
                     `MP: ${spell.mpCost}`,
                     85,
-                    88 + (index * 15),
+                    63 + (index * 15),
                     8
                 );
             });
         } else if (this.itemMenu.active) {
             // Draw item menu
             renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            renderer.ctx.fillRect(80, 70, 75, 70);
+            renderer.ctx.fillRect(80, 45, 75, 70);
 
             renderer.gameState.inventory.forEach((item, index) => {
                 const isSelected = index === this.itemMenu.selectedIndex;
@@ -261,14 +278,14 @@ export class BattleSystem {
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${item.name} x${item.quantity}`,
                     85,
-                    80 + (index * 15),
+                    55 + (index * 15),
                     10
                 );
             });
         } else {
             // Draw battle menu background
             renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            renderer.ctx.fillRect(80, 70, 75, 70);
+            renderer.ctx.fillRect(80, 45, 75, 70);
 
             // Draw battle menu options
             this.battleMenu.options.forEach((option, index) => {
@@ -277,7 +294,7 @@ export class BattleSystem {
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${option}`,
                     85,
-                    80 + (index * 15),
+                    55 + (index * 15),
                     10
                 );
             });

@@ -222,12 +222,12 @@ export class BattleSystem {
         }
 
         // Draw player at the bottom left
-        renderer.drawCharacter('🧙‍♂️', 20, 60, 24);
+        renderer.drawCharacter('🧙‍♂️', 30, 60, 24);
 
         // Draw player stats
         renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        renderer.ctx.fillRect(8, 88, 60, 24);
-        renderer.drawStats(10, 100);
+        renderer.ctx.fillRect(15, 88, 60, 24);
+        renderer.drawStats(40, 100);
 
         // Draw battle log background with more width
         renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -237,32 +237,32 @@ export class BattleSystem {
         const lastMessages = this.battleLog.slice(-2);
         lastMessages.forEach((msg, i) => {
             renderer.ctx.fillStyle = '#ffffff';
-            renderer.drawText(msg, 20, 20 + (i * 12), 8);
+            renderer.drawText(msg, 75, 20 + (i * 12), 8);
         });
 
         // Draw controls hint at the bottom with adjusted position
         renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         renderer.ctx.fillRect(15, 115, 130, 20);
         renderer.ctx.fillStyle = '#ffffff';
-        renderer.drawText('⬆️⬇️:Select  Z:OK  X:Back', 20, 127, 8);
+        renderer.drawText('⬆️⬇️:Select  Z:OK  X:Back', 75, 127, 8);
 
         if (this.magicMenu.active) {
             // Draw magic menu
             renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            renderer.ctx.fillRect(80, 45, 75, 70);
+            renderer.ctx.fillRect(85, 45, 75, 70);
 
             renderer.gameState.player.spells.forEach((spell, index) => {
                 const isSelected = index === this.magicMenu.selectedIndex;
                 renderer.ctx.fillStyle = '#ffffff';
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${spell.name}`,
-                    85,
+                    90,
                     55 + (index * 15),
                     10
                 );
                 renderer.drawText(
                     `MP: ${spell.mpCost}`,
-                    85,
+                    90,
                     63 + (index * 15),
                     8
                 );
@@ -270,14 +270,14 @@ export class BattleSystem {
         } else if (this.itemMenu.active) {
             // Draw item menu
             renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            renderer.ctx.fillRect(80, 45, 75, 70);
+            renderer.ctx.fillRect(85, 45, 75, 70);
 
             renderer.gameState.inventory.forEach((item, index) => {
                 const isSelected = index === this.itemMenu.selectedIndex;
                 renderer.ctx.fillStyle = '#ffffff';
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${item.name} x${item.quantity}`,
-                    85,
+                    90,
                     55 + (index * 15),
                     10
                 );
@@ -285,7 +285,7 @@ export class BattleSystem {
         } else {
             // Draw battle menu background
             renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            renderer.ctx.fillRect(80, 45, 75, 70);
+            renderer.ctx.fillRect(85, 45, 75, 70);
 
             // Draw battle menu options
             this.battleMenu.options.forEach((option, index) => {
@@ -293,7 +293,7 @@ export class BattleSystem {
                 renderer.ctx.fillStyle = '#ffffff';
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${option}`,
-                    85,
+                    120,
                     55 + (index * 15),
                     10
                 );

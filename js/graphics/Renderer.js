@@ -2,9 +2,9 @@ export class Renderer {
     constructor(ctx) {
         this.ctx = ctx;
         this.gameState = null; // Will be set by main game
-        // Calculate offsets based on canvas dimensions (160x144)
-        this.offsetX = (160 - (8 * 16)) / 2; // Assuming 8 tiles width
-        this.offsetY = (144 - (8 * 16)) / 2; // Assuming 8 tiles height
+        // Use a smaller fixed offset of 8 pixels
+        this.offsetX = 8;
+        this.offsetY = 8;
     }
 
     setGameState(gameState) {

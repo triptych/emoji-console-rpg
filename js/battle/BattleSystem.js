@@ -256,13 +256,13 @@ export class BattleSystem {
                 renderer.ctx.fillStyle = '#ffffff';
                 renderer.drawText(
                     `${isSelected ? '▶️' : '  '}${spell.name}`,
-                    90,
+                    120,
                     55 + (index * 15),
                     10
                 );
                 renderer.drawText(
                     `MP: ${spell.mpCost}`,
-                    90,
+                    120,
                     63 + (index * 15),
                     8
                 );

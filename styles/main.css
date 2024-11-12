@@ -2,6 +2,7 @@
     --gameboy-gray: #8b8b8b;
     --gameboy-dark: #2c2c2c;
     --screen-color: #9bbc0f;
+    --game-scale: 3; /* Base scale factor for the game */
 }
 
 * {
@@ -20,8 +21,7 @@ body {
 }
 
 .game-container {
-    width: 100%;
-    max-width: 400px;
+    width: fit-content;
     background-color: var(--gameboy-gray);
     border-radius: 15px;
     padding: 20px;
@@ -33,15 +33,21 @@ body {
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #gameCanvas {
-    width: 100%;
-    aspect-ratio: 160/144;
-    background-color: var(--screen-color);
+    display: block;
+    width: calc(160px * var(--game-scale)) !important; /* Force larger size */
+    height: calc(144px * var(--game-scale)) !important; /* Force larger size */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
     image-rendering: pixelated;
+    image-rendering: crisp-edges;
     cursor: pointer;
-    outline: none; /* Remove focus outline */
+    outline: none;
 }
 
 #gameCanvas:focus {
@@ -57,14 +63,14 @@ body {
 
 .d-pad {
     position: relative;
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
 }
 
 .d-pad button {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     background: var(--gameboy-dark);
     border: none;
     border-radius: 5px;
@@ -73,10 +79,10 @@ body {
     user-select: none;
 }
 
-.d-pad .up { top: 0; left: 40px; }
-.d-pad .right { top: 40px; right: 0; }
-.d-pad .down { bottom: 0; left: 40px; }
-.d-pad .left { top: 40px; left: 0; }
+.d-pad .up { top: 0; left: 30px; }
+.d-pad .right { top: 30px; right: 0; }
+.d-pad .down { bottom: 0; left: 30px; }
+.d-pad .left { top: 30px; left: 0; }
 
 .menu-buttons {
     display: flex;
@@ -98,14 +104,14 @@ body {
 
 .action-buttons {
     position: relative;
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
 }
 
 .action-buttons button {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     background: var(--gameboy-dark);
     border: none;
     border-radius: 50%;
@@ -114,10 +120,10 @@ body {
     user-select: none;
 }
 
-.action-buttons .y { top: 0; left: 40px; }
-.action-buttons .x { top: 40px; right: 0; }
-.action-buttons .a { bottom: 0; left: 40px; }
-.action-buttons .b { top: 40px; left: 0; }
+.action-buttons .y { top: 0; left: 30px; }
+.action-buttons .x { top: 30px; right: 0; }
+.action-buttons .a { bottom: 0; left: 30px; }
+.action-buttons .b { top: 30px; left: 0; }
 
 button:active {
     transform: scale(0.95);

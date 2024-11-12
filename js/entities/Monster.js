@@ -15,6 +15,13 @@ export class Monster {
             { dx: 0, dy: 1 },  // down
             { dx: -1, dy: 0 }  // left
         ];
+
+        // Animation properties
+        this.shakeOffset = { x: 0, y: 0 };
+        this.shakeAmount = 3;
+        this.shakeDuration = 200; // milliseconds
+        this.shakeTimer = 0;
+        this.isShaking = false;
     }
 
     update(deltaTime, mapManager) {
@@ -23,6 +30,34 @@ export class Monster {
             this.moveTimer = 0;
             this.moveRandomly(mapManager);
         }
+
+        // Update shake animation
+        this.updateAnimation(deltaTime);
+    }
+
+    updateAnimation(deltaTime) {
+        if (this.isShaking) {
+            this.shakeTimer += deltaTime;
+
+            if (this.shakeTimer < this.shakeDuration) {
+                // Calculate shake offset using sine waves for a smooth shake effect
+                const progress = this.shakeTimer / this.shakeDuration;
+                const shake = Math.sin(progress * Math.PI * 4) * this.shakeAmount * (1 - progress);
+                this.shakeOffset.x = shake;
+                this.shakeOffset.y = shake * 0.5;
+            } else {
+                // Reset shake
+                this.isShaking = false;
+                this.shakeTimer = 0;
+                this.shakeOffset.x = 0;
+                this.shakeOffset.y = 0;
+            }
+        }
+    }
+
+    startShake() {
+        this.isShaking = true;
+        this.shakeTimer = 0;
     }
 
     moveRandomly(mapManager) {

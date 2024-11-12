@@ -15,13 +15,44 @@ export class BattleSystem {
             selectedIndex: 0
         };
         this.lastInputTime = 0;
-        this.inputDelay = 200;
+        this.inputDelay = 100; // Reduced from 200ms to 100ms for better responsiveness
         this.battleLog = [];
     }
 
     startBattle = (enemy) => {
         this.inBattle = true;
-        this.currentEnemy = enemy;
+        // Initialize a battle-specific enemy object with required animation properties
+        this.currentEnemy = {
+            ...enemy,
+            shakeOffset: { x: 0, y: 0 },
+            shakeAmount: 3,
+            shakeDuration: 200,
+            shakeTimer: 0,
+            isShaking: false,
+            updateAnimation: function(deltaTime) {
+                if (this.isShaking) {
+                    this.shakeTimer += deltaTime;
+
+                    if (this.shakeTimer < this.shakeDuration) {
+                        // Calculate shake offset using sine waves for a smooth shake effect
+                        const progress = this.shakeTimer / this.shakeDuration;
+                        const shake = Math.sin(progress * Math.PI * 4) * this.shakeAmount * (1 - progress);
+                        this.shakeOffset.x = shake;
+                        this.shakeOffset.y = shake * 0.5;
+                    } else {
+                        // Reset shake
+                        this.isShaking = false;
+                        this.shakeTimer = 0;
+                        this.shakeOffset.x = 0;
+                        this.shakeOffset.y = 0;
+                    }
+                }
+            },
+            startShake: function() {
+                this.isShaking = true;
+                this.shakeTimer = 0;
+            }
+        };
         this.battleMenu.selectedIndex = 0;
         this.magicMenu.active = false;
         this.itemMenu.active = false;
@@ -45,6 +76,11 @@ export class BattleSystem {
                 this.handleMainMenuInput(input, gameState);
             }
             this.lastInputTime = currentTime;
+        }
+
+        // Update monster shake animation if it exists
+        if (this.currentEnemy) {
+            this.currentEnemy.updateAnimation(deltaTime);
         }
     }
 
@@ -143,6 +179,7 @@ export class BattleSystem {
         if (this.currentEnemy) {
             const damage = 3;
             this.currentEnemy.hp -= damage;
+            this.currentEnemy.startShake(); // Trigger shake animation
             this.battleLog.push(`Dealt ${damage} damage!`);
             if (this.currentEnemy.hp <= 0) {
                 this.endBattle(true);
@@ -209,7 +246,10 @@ export class BattleSystem {
         const enemyX = 110;
         const enemyY = 20;
         if (this.currentEnemy) {
-            renderer.drawCharacter(this.currentEnemy.emoji, enemyX, enemyY, 24);
+            // Apply shake offset if animation is active
+            const shakeOffsetX = this.currentEnemy.shakeOffset.x;
+            const shakeOffsetY = this.currentEnemy.shakeOffset.y;
+            renderer.drawCharacter(this.currentEnemy.emoji, enemyX + shakeOffsetX, enemyY + shakeOffsetY, 24);
 
             // Draw enemy HP bar background
             renderer.ctx.fillStyle = '#2c2c2c';

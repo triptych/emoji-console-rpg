@@ -13,6 +13,9 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.setupCanvas();
 
+        // Make game instance globally available for MapManager
+        window.game = this;
+
         this.gameState = new GameState();
         this.renderer = new Renderer(this.ctx);
         this.renderer.setGameState(this.gameState);
@@ -38,13 +41,30 @@ class Game {
             this.canvas.focus();
         });
 
+        // Handle resize events
+        window.addEventListener('resize', this.setupCanvas);
+
         this.init();
     }
 
     setupCanvas = () => {
-        this.canvas.width = 160;
-        this.canvas.height = 144;
+        const baseWidth = 160;
+        const baseHeight = 144;
+        const dpr = window.devicePixelRatio || 1;
+        const scale = 3; // Match the CSS scale factor
+
+        // Set the canvas's internal dimensions with scale and DPR
+        this.canvas.width = baseWidth * scale * dpr;
+        this.canvas.height = baseHeight * scale * dpr;
+
+        // Scale the context to handle both the game scale and device pixel ratio
+        this.ctx.scale(scale * dpr, scale * dpr);
+
+        // Disable image smoothing for crisp pixel art
         this.ctx.imageSmoothingEnabled = false;
+        this.ctx.mozImageSmoothingEnabled = false;
+        this.ctx.webkitImageSmoothingEnabled = false;
+        this.ctx.msImageSmoothingEnabled = false;
     }
 
     init = () => {
@@ -146,10 +166,10 @@ class Game {
                 break;
 
             case 'MENU':
-                if (input.up) {
+                if (input.upPressed) {
                     this.gameState.selectPreviousMenuOption();
                 }
-                if (input.down) {
+                if (input.downPressed) {
                     this.gameState.selectNextMenuOption();
                 }
                 if (input.aPressed) {
@@ -167,7 +187,7 @@ class Game {
     renderSplashScreen = () => {
         const ctx = this.ctx;
         ctx.fillStyle = '#9bbc0f';
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillRect(0, 0, 160, 144);
 
         // Calculate animation progress (0 to 1)
         const progress = Math.min(1, (Date.now() - this.gameState.splashStartTime) / 2000);
@@ -181,19 +201,19 @@ class Game {
         const bounce = Math.sin(progress * Math.PI) * (1 - progress) * 10;
         const y = 50 + bounce;
 
-        ctx.fillText('Emoji Game', this.canvas.width / 2, y);
-        ctx.fillText('System', this.canvas.width / 2, y + 20);
+        ctx.fillText('Emoji Game', 80, y);
+        ctx.fillText('System', 80, y + 20);
 
         // Fade in press start text
         if (progress > 0.5) {
             const alpha = Math.min(1, (progress - 0.5) * 2);
             ctx.fillStyle = `rgba(15, 56, 15, ${alpha})`;
             ctx.font = '8px monospace';
-            ctx.fillText('PRESS START', this.canvas.width / 2, 100);
+            ctx.fillText('PRESS START', 80, 100);
 
             // Show "Continue" text if save exists
             if (this.gameState.hasSaveGame) {
-                ctx.fillText('(SAVE DATA EXISTS)', this.canvas.width / 2, 110);
+                ctx.fillText('(SAVE DATA EXISTS)', 80, 110);
             }
         }
 
@@ -201,7 +221,7 @@ class Game {
         const emoji = ['🎮', '🎲', '🎯', '🎪'];
         emoji.forEach((e, i) => {
             const angle = (progress * Math.PI * 2) + (i * Math.PI / 2);
-            const x = this.canvas.width / 2 + Math.cos(angle) * 40;
+            const x = 80 + Math.cos(angle) * 40;
             const y = 72 + Math.sin(angle) * 20;
             ctx.font = '16px serif';
             ctx.fillText(e, x, y);
@@ -210,7 +230,7 @@ class Game {
 
     render = () => {
         this.ctx.fillStyle = '#9bbc0f';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, 160, 144);
 
         switch(this.gameState.currentState) {
             case 'SPLASH':
@@ -238,7 +258,7 @@ class Game {
                 }
                 this.player.render(this.renderer);
 
-                // Render semi-transparent menu background with larger size
+                // Render semi-transparent menu background
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
                 this.ctx.fillRect(5, 5, 150, 100);
 
@@ -261,14 +281,14 @@ class Game {
                     this.ctx.fillStyle = '#000000';
                     this.renderer.drawText(
                         `${isSelected ? '▶️ ' : '  '}${option}`,
-                        11,
+                        76,
                         25 + (index * 20),
                         12
                     );
                     this.ctx.fillStyle = '#ffffff';
                     this.renderer.drawText(
                         `${isSelected ? '▶️ ' : '  '}${option}`,
-                        10,
+                        75,
                         24 + (index * 20),
                         12
                     );
@@ -280,7 +300,7 @@ class Game {
                 this.ctx.strokeRect(5, 110, 150, 20);
 
                 this.ctx.fillStyle = '#ffffff';
-                this.renderer.drawText('🅰️:Select 🅱️:Back', 10, 124, 10);
+                this.renderer.drawText('🅰️:Select 🅱️:Back', 75, 124, 10);
                 break;
         }
     }

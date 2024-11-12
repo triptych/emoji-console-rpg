@@ -19,9 +19,9 @@ export class Player {
 
         // Initialize spells
         this.spells = [
-            { name: 'Fire', mpCost: 3, damage: 5 },
-            { name: 'Ice', mpCost: 4, damage: 6 },
-            { name: 'Heal', mpCost: 5, healing: 8 }
+            { name: '🔥 Fire', mpCost: 3, damage: 5 },
+            { name: '❄️ Ice', mpCost: 4, damage: 6 },
+            { name: '💚 Heal', mpCost: 5, healing: 8 }
         ];
     }
 

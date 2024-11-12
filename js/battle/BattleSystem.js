@@ -15,7 +15,7 @@ export class BattleSystem {
             selectedIndex: 0
         };
         this.lastInputTime = 0;
-        this.inputDelay = 100; // Reduced from 200ms to 100ms for better responsiveness
+        this.inputDelay = 0;
         this.battleLog = [];
     }
 
@@ -85,10 +85,10 @@ export class BattleSystem {
     }
 
     handleMainMenuInput = (input, gameState) => {
-        if (input.upPressed || input.up) {
+        if (input.upPressed) {
             this.battleMenu.selectedIndex = (this.battleMenu.selectedIndex - 1 + this.battleMenu.options.length) % this.battleMenu.options.length;
         }
-        if (input.downPressed || input.down) {
+        if (input.downPressed) {
             this.battleMenu.selectedIndex = (this.battleMenu.selectedIndex + 1) % this.battleMenu.options.length;
         }
         if (input.aPressed) {
@@ -102,10 +102,10 @@ export class BattleSystem {
 
     handleMagicMenuInput = (input, gameState) => {
         const spells = gameState.player.spells;
-        if (input.upPressed || input.up) {
+        if (input.upPressed) {
             this.magicMenu.selectedIndex = (this.magicMenu.selectedIndex - 1 + spells.length) % spells.length;
         }
-        if (input.downPressed || input.down) {
+        if (input.downPressed) {
             this.magicMenu.selectedIndex = (this.magicMenu.selectedIndex + 1) % spells.length;
         }
         if (input.aPressed) {
@@ -139,10 +139,10 @@ export class BattleSystem {
             return null;
         }
 
-        if (input.upPressed || input.up) {
+        if (input.upPressed) {
             this.itemMenu.selectedIndex = (this.itemMenu.selectedIndex - 1 + items.length) % items.length;
         }
-        if (input.downPressed || input.down) {
+        if (input.downPressed) {
             this.itemMenu.selectedIndex = (this.itemMenu.selectedIndex + 1) % items.length;
         }
         if (input.aPressed) {
@@ -201,11 +201,12 @@ export class BattleSystem {
     enemyTurn = (gameState) => {
         if (this.currentEnemy && this.currentEnemy.hp > 0) {
             const damage = 2;
-            gameState.player.stats.hp -= damage;
+            // Use the player's takeDamage method instead of directly modifying stats
+            const survived = gameState.player.takeDamage(damage);
             this.battleLog.push(`Enemy dealt ${damage} damage!`);
             this.battleLog.push('Select action with ⬆️⬇️');
 
-            if (gameState.player.stats.hp <= 0) {
+            if (!survived) {
                 this.endBattle(false);
             }
 

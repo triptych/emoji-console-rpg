@@ -1,5 +1,5 @@
 export class Monster {
-    constructor(x, y, emoji = '👾', name = 'Wild Monster', level = 1, hp = 10, maxHp = 10) {
+    constructor(x, y, emoji = '👾', name = 'Wild Monster', level = 1, hp = 10, maxHp = 10, room = 0) {
         this.x = x;
         this.y = y;
         this.emoji = emoji;
@@ -7,6 +7,7 @@ export class Monster {
         this.level = level;
         this.hp = hp;
         this.maxHp = maxHp;
+        this.room = room;  // Track which room the monster belongs to
         this.moveTimer = 0;
         this.moveInterval = 1000; // Move every 1 second
         this.directions = [
@@ -25,14 +26,17 @@ export class Monster {
     }
 
     update(deltaTime, mapManager) {
-        this.moveTimer += deltaTime;
-        if (this.moveTimer >= this.moveInterval) {
-            this.moveTimer = 0;
-            this.moveRandomly(mapManager);
-        }
+        // Only update if monster is in current room
+        if (this.room === mapManager.currentRoom) {
+            this.moveTimer += deltaTime;
+            if (this.moveTimer >= this.moveInterval) {
+                this.moveTimer = 0;
+                this.moveRandomly(mapManager);
+            }
 
-        // Update shake animation
-        this.updateAnimation(deltaTime);
+            // Update shake animation
+            this.updateAnimation(deltaTime);
+        }
     }
 
     updateAnimation(deltaTime) {
@@ -72,8 +76,11 @@ export class Monster {
         }
     }
 
-    render(renderer) {
-        renderer.drawText(this.emoji, this.x * 16, this.y * 16 + 12, 16);
+    render(renderer, mapManager) {
+        // Only render if monster is in current room
+        if (this.room === mapManager.currentRoom) {
+            renderer.drawText(this.emoji, this.x * 16, this.y * 16 + 12, 16);
+        }
     }
 
     getBattleStats() {

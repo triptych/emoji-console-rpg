@@ -32,11 +32,11 @@ class Game {
         this.audioManager = new AudioManager();
         this.audioInitialized = false;
 
-        // Initialize monsters
+        // Initialize monsters with room assignments
         this.monsters = [
-            new Monster(5, 5, '👻', 'Ghost', 2, 15, 15),
-            new Monster(8, 3, '🐉', 'Dragon', 3, 20, 20),
-            new Monster(3, 7, '🧟', 'Zombie', 1, 10, 10)
+            new Monster(5, 5, '👻', 'Ghost', 2, 15, 15, 0),   // Room 0
+            new Monster(8, 3, '🐉', 'Dragon', 3, 20, 20, 1),  // Room 1
+            new Monster(3, 7, '🧟', 'Zombie', 1, 10, 10, 2)   // Room 2
         ];
 
         this.lastTime = 0;
@@ -95,7 +95,9 @@ class Game {
     }
 
     checkMonsterCollision = () => {
-        for (let monster of this.monsters) {
+        // Only check monsters in current room
+        const currentRoomMonsters = this.monsters.filter(m => m.room === this.mapManager.currentRoom);
+        for (let monster of currentRoomMonsters) {
             if (monster.x === this.player.x && monster.y === this.player.y) {
                 console.log('Monster collision!');
                 this.gameState.setState('BATTLE');
@@ -116,29 +118,38 @@ class Game {
                 this.gameState.splashAnimationFrame++;
                 if (input.aPressed || input.startPressed) {
                     console.log('Input detected on splash screen, transitioning to EXPLORING');
-                    try {
-                        // Initialize audio system on first interaction
-                        if (!this.audioInitialized) {
-                            console.log('Initializing audio system on first interaction...');
+                    // Initialize audio system if not already initialized
+                    if (!this.audioInitialized) {
+                        try {
+                            console.log('Initializing audio system...');
                             await this.audioManager.initialize();
                             this.audioInitialized = true;
                             console.log('Audio system initialized successfully');
+                        } catch (error) {
+                            console.error('Audio initialization failed:', error);
+                            // Continue even if audio fails
                         }
+                    }
 
-                        console.log('Playing startup sound...');
-                        await this.audioManager.playStartup();
-                        console.log('Startup sound played successfully');
-
-                        if (this.gameState.hasSaveGame) {
-                            this.gameState.loadGame();
+                    try {
+                        if (this.audioInitialized) {
+                            await this.audioManager.playStartup();
                         }
-                        this.gameState.setState('EXPLORING');
-
-                        console.log('Starting background music...');
-                        await this.audioManager.playBgm();
-                        console.log('Background music started successfully');
                     } catch (error) {
-                        console.error('Error during game start:', error);
+                        console.error('Error playing startup sound:', error);
+                    }
+
+                    if (this.gameState.hasSaveGame) {
+                        this.gameState.loadGame();
+                    }
+                    this.gameState.setState('EXPLORING');
+
+                    try {
+                        if (this.audioInitialized) {
+                            await this.audioManager.playBgm();
+                        }
+                    } catch (error) {
+                        console.error('Error playing background music:', error);
                     }
                 }
                 break;
@@ -147,8 +158,9 @@ class Game {
                 if (input.startPressed) {
                     console.log('Opening menu');
                     try {
-                        await this.audioManager.playSelect();
-                        console.log('Menu select sound played');
+                        if (this.audioInitialized) {
+                            await this.audioManager.playSelect();
+                        }
                     } catch (error) {
                         console.error('Error playing menu select sound:', error);
                     }
@@ -166,7 +178,7 @@ class Game {
                     this.player.y = oldY;
                 }
 
-                // Update monsters
+                // Update monsters in current room
                 for (let monster of this.monsters) {
                     monster.update(deltaTime, this.mapManager);
                 }
@@ -182,8 +194,9 @@ class Game {
                 const battleResult = this.battleSystem.update(deltaTime, input, this.gameState);
                 if (battleResult && battleResult.hit) {
                     try {
-                        await this.audioManager.playDamage();
-                        console.log('Damage sound played');
+                        if (this.audioInitialized) {
+                            await this.audioManager.playDamage();
+                        }
                     } catch (error) {
                         console.error('Error playing damage sound:', error);
                     }
@@ -191,8 +204,10 @@ class Game {
                 if (!this.battleSystem.inBattle) {
                     console.log('Battle ended, returning to exploration');
                     this.gameState.setState('EXPLORING');
-                    // Spawn a new monster to replace the defeated one
-                    if (this.monsters.length < 3) {
+
+                    // Check if we need to spawn a new monster in the current room
+                    const monstersInCurrentRoom = this.monsters.filter(m => m.room === this.mapManager.currentRoom).length;
+                    if (monstersInCurrentRoom < 1) {
                         const positions = [
                             {x: 5, y: 5}, {x: 8, y: 3}, {x: 3, y: 7},
                             {x: 6, y: 4}, {x: 4, y: 6}, {x: 7, y: 5}
@@ -207,7 +222,7 @@ class Game {
 
                         // Find a position that's not occupied by other monsters or the player
                         const validPositions = positions.filter(pos => {
-                            return !this.monsters.some(m => m.x === pos.x && m.y === pos.y) &&
+                            return !this.monsters.some(m => m.room === this.mapManager.currentRoom && m.x === pos.x && m.y === pos.y) &&
                                    !(this.player.x === pos.x && this.player.y === pos.y);
                         });
 
@@ -215,7 +230,7 @@ class Game {
                             const pos = validPositions[Math.floor(Math.random() * validPositions.length)];
                             const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
                             const hp = 10 + (type.level * 5);
-                            this.monsters.push(new Monster(pos.x, pos.y, type.emoji, type.name, type.level, hp, hp));
+                            this.monsters.push(new Monster(pos.x, pos.y, type.emoji, type.name, type.level, hp, hp, this.mapManager.currentRoom));
                         }
                     }
                 }
@@ -224,8 +239,9 @@ class Game {
             case 'MENU':
                 if (input.upPressed || input.downPressed) {
                     try {
-                        await this.audioManager.playSelect();
-                        console.log('Menu navigation sound played');
+                        if (this.audioInitialized) {
+                            await this.audioManager.playSelect();
+                        }
                     } catch (error) {
                         console.error('Error playing menu navigation sound:', error);
                     }
@@ -239,8 +255,9 @@ class Game {
                 if (input.aPressed) {
                     console.log('Executing menu option:', this.gameState.menuOptions[this.gameState.selectedMenuOption]);
                     try {
-                        await this.audioManager.playSelect();
-                        console.log('Menu select sound played');
+                        if (this.audioInitialized) {
+                            await this.audioManager.playSelect();
+                        }
                     } catch (error) {
                         console.error('Error playing menu select sound:', error);
                     }
@@ -249,8 +266,9 @@ class Game {
                 if (input.bPressed) {
                     console.log('Closing menu');
                     try {
-                        await this.audioManager.playSelect();
-                        console.log('Menu close sound played');
+                        if (this.audioInitialized) {
+                            await this.audioManager.playSelect();
+                        }
                     } catch (error) {
                         console.error('Error playing menu close sound:', error);
                     }
@@ -315,9 +333,9 @@ class Game {
 
             case 'EXPLORING':
                 this.mapManager.render(this.renderer);
-                // Render monsters
+                // Render monsters in current room
                 for (let monster of this.monsters) {
-                    monster.render(this.renderer);
+                    monster.render(this.renderer, this.mapManager);
                 }
                 this.player.render(this.renderer);
                 break;
@@ -330,7 +348,7 @@ class Game {
                 // Render the game world behind the menu
                 this.mapManager.render(this.renderer);
                 for (let monster of this.monsters) {
-                    monster.render(this.renderer);
+                    monster.render(this.renderer, this.mapManager);
                 }
                 this.player.render(this.renderer);
 

@@ -92,11 +92,12 @@ export class BattleSystem {
             this.battleMenu.selectedIndex = (this.battleMenu.selectedIndex + 1) % this.battleMenu.options.length;
         }
         if (input.aPressed) {
-            this.executeAction(this.battleMenu.selectedIndex, gameState);
+            return this.executeAction(this.battleMenu.selectedIndex, gameState);
         }
         if (input.bPressed && this.battleMenu.selectedIndex === 3) {
-            this.attemptRun(gameState);
+            return this.attemptRun(gameState);
         }
+        return null;
     }
 
     handleMagicMenuInput = (input, gameState) => {
@@ -117,7 +118,7 @@ export class BattleSystem {
                 const spell = spells[this.magicMenu.selectedIndex];
                 this.battleLog.push(`Used ${spell.name}!`);
                 this.magicMenu.active = false;
-                this.enemyTurn(gameState);
+                return this.enemyTurn(gameState);
             } else {
                 this.battleLog.push('Not enough MP!');
             }
@@ -126,6 +127,7 @@ export class BattleSystem {
             this.magicMenu.active = false;
             this.battleLog.push('Select action with ⬆️⬇️');
         }
+        return null;
     }
 
     handleItemMenuInput = (input, gameState) => {
@@ -134,7 +136,7 @@ export class BattleSystem {
             this.battleLog.push('No items!');
             this.itemMenu.active = false;
             this.battleLog.push('Select action with ⬆️⬇️');
-            return;
+            return null;
         }
 
         if (input.upPressed || input.up) {
@@ -149,20 +151,20 @@ export class BattleSystem {
                 const item = items[this.itemMenu.selectedIndex];
                 this.battleLog.push(`Used ${item.name}!`);
                 this.itemMenu.active = false;
-                this.enemyTurn(gameState);
+                return this.enemyTurn(gameState);
             }
         }
         if (input.bPressed) {
             this.itemMenu.active = false;
             this.battleLog.push('Select action with ⬆️⬇️');
         }
+        return null;
     }
 
     executeAction = (index, gameState) => {
         switch(index) {
             case 0: // Attack
-                this.performAttack(gameState);
-                break;
+                return this.performAttack(gameState);
             case 1: // Magic
                 this.openMagicMenu();
                 break;
@@ -170,9 +172,9 @@ export class BattleSystem {
                 this.openItemMenu();
                 break;
             case 3: // Run
-                this.attemptRun(gameState);
-                break;
+                return this.attemptRun(gameState);
         }
+        return null;
     }
 
     performAttack = (gameState) => {
@@ -181,12 +183,19 @@ export class BattleSystem {
             this.currentEnemy.hp -= damage;
             this.currentEnemy.startShake(); // Trigger shake animation
             this.battleLog.push(`Dealt ${damage} damage!`);
+
+            const result = { hit: true, damage };
+
             if (this.currentEnemy.hp <= 0) {
                 this.endBattle(true);
             } else {
-                this.enemyTurn(gameState);
+                const enemyTurnResult = this.enemyTurn(gameState);
+                return { ...result, enemyTurn: enemyTurnResult };
             }
+
+            return result;
         }
+        return null;
     }
 
     enemyTurn = (gameState) => {
@@ -199,7 +208,10 @@ export class BattleSystem {
             if (gameState.player.stats.hp <= 0) {
                 this.endBattle(false);
             }
+
+            return { hit: true, damage };
         }
+        return null;
     }
 
     openMagicMenu = () => {
@@ -220,9 +232,10 @@ export class BattleSystem {
         if (Math.random() < 0.75) {
             this.battleLog.push('Got away safely!');
             this.endBattle(false);
+            return { escaped: true };
         } else {
             this.battleLog.push('Could not escape!');
-            this.enemyTurn(gameState);
+            return this.enemyTurn(gameState);
         }
     }
 

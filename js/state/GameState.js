@@ -6,6 +6,19 @@ export class GameState {
         this.hasSaveGame = false;
         this.selectedMenuOption = 0;
         this.menuOptions = ['Continue', 'Save Game', 'Settings'];
+
+        // Initialize player
+        this.player = null; // Will be set by the game instance
+
+        // Initialize inventory
+        this.inventory = [
+            { name: 'Potion', quantity: 3, healing: 10 },
+            { name: 'Ether', quantity: 2, mpRestore: 5 }
+        ];
+    }
+
+    setPlayer(player) {
+        this.player = player;
     }
 
     setState(newState) {
@@ -58,5 +71,37 @@ export class GameState {
     loadGame() {
         // TODO: Implement load functionality
         console.log('Loading game...');
+    }
+
+    useItem(index, target) {
+        const item = this.inventory[index];
+        if (!item || item.quantity <= 0) return false;
+
+        if (item.healing && target.stats.hp < target.stats.maxHp) {
+            target.heal(item.healing);
+            item.quantity--;
+            return true;
+        } else if (item.mpRestore && target.stats.mp < target.stats.maxMp) {
+            target.restoreMp(item.mpRestore);
+            item.quantity--;
+            return true;
+        }
+        return false;
+    }
+
+    castSpell(index, caster, target) {
+        const spell = caster.spells[index];
+        if (!spell) return false;
+
+        if (caster.useMp(spell.mpCost)) {
+            if (spell.damage) {
+                target.hp -= spell.damage;
+                return true;
+            } else if (spell.healing) {
+                caster.heal(spell.healing);
+                return true;
+            }
+        }
+        return false;
     }
 }

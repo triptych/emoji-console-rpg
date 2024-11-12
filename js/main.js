@@ -5,6 +5,7 @@ import { MapManager } from './world/MapManager.js';
 import { Player } from './entities/Player.js';
 import { BattleSystem } from './battle/BattleSystem.js';
 import { Monster } from './entities/Monster.js';
+import { AudioManager } from './audio/AudioManager.js';
 
 class Game {
     constructor() {
@@ -16,13 +17,20 @@ class Game {
         // Make game instance globally available for MapManager
         window.game = this;
 
+        // Initialize player first
+        this.player = new Player();
+
+        // Initialize core game systems
         this.gameState = new GameState();
+        this.gameState.setPlayer(this.player); // Set player in game state
+
         this.renderer = new Renderer(this.ctx);
         this.renderer.setGameState(this.gameState);
         this.input = new InputHandler();
         this.mapManager = new MapManager();
-        this.player = new Player();
         this.battleSystem = new BattleSystem();
+        this.audioManager = new AudioManager();
+        this.audioInitialized = false;
 
         // Initialize monsters
         this.monsters = [
@@ -43,6 +51,20 @@ class Game {
 
         // Handle resize events
         window.addEventListener('resize', this.setupCanvas);
+
+        // Add click handler for audio initialization
+        document.addEventListener('click', async () => {
+            if (!this.audioInitialized) {
+                try {
+                    console.log('Attempting to initialize audio system...');
+                    await this.audioManager.initialize();
+                    this.audioInitialized = true;
+                    console.log('Audio system initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize audio system:', error);
+                }
+            }
+        });
 
         this.init();
     }
@@ -86,7 +108,7 @@ class Game {
         return false;
     }
 
-    update = (deltaTime) => {
+    update = async (deltaTime) => {
         const input = this.input.getInput();
 
         switch(this.gameState.currentState) {
@@ -94,16 +116,42 @@ class Game {
                 this.gameState.splashAnimationFrame++;
                 if (input.aPressed || input.startPressed) {
                     console.log('Input detected on splash screen, transitioning to EXPLORING');
-                    if (this.gameState.hasSaveGame) {
-                        this.gameState.loadGame();
+                    try {
+                        // Initialize audio system on first interaction
+                        if (!this.audioInitialized) {
+                            console.log('Initializing audio system on first interaction...');
+                            await this.audioManager.initialize();
+                            this.audioInitialized = true;
+                            console.log('Audio system initialized successfully');
+                        }
+
+                        console.log('Playing startup sound...');
+                        await this.audioManager.playStartup();
+                        console.log('Startup sound played successfully');
+
+                        if (this.gameState.hasSaveGame) {
+                            this.gameState.loadGame();
+                        }
+                        this.gameState.setState('EXPLORING');
+
+                        console.log('Starting background music...');
+                        await this.audioManager.playBgm();
+                        console.log('Background music started successfully');
+                    } catch (error) {
+                        console.error('Error during game start:', error);
                     }
-                    this.gameState.setState('EXPLORING');
                 }
                 break;
 
             case 'EXPLORING':
                 if (input.startPressed) {
                     console.log('Opening menu');
+                    try {
+                        await this.audioManager.playSelect();
+                        console.log('Menu select sound played');
+                    } catch (error) {
+                        console.error('Error playing menu select sound:', error);
+                    }
                     this.gameState.toggleMenu();
                     break;
                 }
@@ -131,7 +179,15 @@ class Game {
                 break;
 
             case 'BATTLE':
-                this.battleSystem.update(deltaTime, input, this.gameState);
+                const battleResult = this.battleSystem.update(deltaTime, input, this.gameState);
+                if (battleResult && battleResult.hit) {
+                    try {
+                        await this.audioManager.playDamage();
+                        console.log('Damage sound played');
+                    } catch (error) {
+                        console.error('Error playing damage sound:', error);
+                    }
+                }
                 if (!this.battleSystem.inBattle) {
                     console.log('Battle ended, returning to exploration');
                     this.gameState.setState('EXPLORING');
@@ -166,6 +222,14 @@ class Game {
                 break;
 
             case 'MENU':
+                if (input.upPressed || input.downPressed) {
+                    try {
+                        await this.audioManager.playSelect();
+                        console.log('Menu navigation sound played');
+                    } catch (error) {
+                        console.error('Error playing menu navigation sound:', error);
+                    }
+                }
                 if (input.upPressed) {
                     this.gameState.selectPreviousMenuOption();
                 }
@@ -174,10 +238,22 @@ class Game {
                 }
                 if (input.aPressed) {
                     console.log('Executing menu option:', this.gameState.menuOptions[this.gameState.selectedMenuOption]);
+                    try {
+                        await this.audioManager.playSelect();
+                        console.log('Menu select sound played');
+                    } catch (error) {
+                        console.error('Error playing menu select sound:', error);
+                    }
                     this.gameState.executeMenuOption();
                 }
                 if (input.bPressed) {
                     console.log('Closing menu');
+                    try {
+                        await this.audioManager.playSelect();
+                        console.log('Menu close sound played');
+                    } catch (error) {
+                        console.error('Error playing menu close sound:', error);
+                    }
                     this.gameState.toggleMenu();
                 }
                 break;
@@ -305,11 +381,11 @@ class Game {
         }
     }
 
-    gameLoop = (currentTime = 0) => {
+    gameLoop = async (currentTime = 0) => {
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
 
-        this.update(deltaTime);
+        await this.update(deltaTime);
         this.render();
 
         requestAnimationFrame(this.gameLoop);

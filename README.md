@@ -4,12 +4,38 @@ A retro-style RPG game built with vanilla JavaScript, featuring emoji-based grap
 
 ## Features
 
-- 🎮 Classic GameBoy-style interface
+### Core Gameplay
+
+- 🎮 Classic GameBoy-style interface with authentic color palette
 - 👾 Emoji-based graphics and characters
-- 🗺️ Tile-based movement system
-- ⚔️ Turn-based battle system
+- 🗺️ Tile-based movement system with smooth character transitions
+- 🎯 Grid-based collision detection
+- 💾 Save/load game functionality
+
+### Battle System
+
+- ⚔️ Turn-based battle system with dynamic animations
+- 🔮 Magic system with MP cost management
+- 🎒 Item inventory system with usable items
+- 🏃 Battle escape mechanics with success probability
+- 💫 Visual effects including enemy shake animations
+- 📊 HP/MP status bars with color-coded indicators
+
+### UI Features
+
 - 📱 Mobile-responsive design
-- 🎵 Retro-inspired gameplay
+- 💬 Dynamic battle log system
+- 📜 Context-sensitive menu system
+- 🎯 Cursor-based menu navigation
+- 🌟 Splash screen with animations
+- ⚙️ Game state management with multiple screens (Splash, Menu, Exploring, Battle)
+
+### Character System
+
+- 🧙‍♂️ Player character with stats management
+- 👹 Enemy encounter system
+- 🏃‍♂️ Smooth movement controls with configurable speed
+- ✨ Character status tracking (HP/MP)
 
 ## Controls
 
@@ -18,6 +44,12 @@ A retro-style RPG game built with vanilla JavaScript, featuring emoji-based grap
 - B (X key): Cancel/Back
 - Start (Enter key): Open menu
 - Select (Shift key): Secondary menu
+
+### Battle Controls
+
+- ⬆️⬇️: Navigate menu options
+- Z: Confirm selection
+- X: Back/Cancel action
 
 ## Development
 

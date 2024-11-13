@@ -12,11 +12,34 @@ export class GameState {
         // Initialize player
         this.player = null; // Will be set by the game instance
 
+        // Initialize NPCs
+        this.npcs = []; // Add this line to initialize npcs as an empty array
+
         // Initialize inventory
         this.inventory = [
             { name: 'Potion', quantity: 3, healing: 10 },
             { name: 'Ether', quantity: 2, mpRestore: 5 }
         ];
+
+        // Initialize dialog-related properties
+        this.currentDialog = null;
+    }
+
+    // Method to add NPCs
+    addNPC(npc) {
+        this.npcs.push(npc);
+    }
+
+    // Method to show dialog
+    showDialog(npc) {
+        this.currentDialog = npc;
+        this.setState('DIALOG');
+    }
+
+    // Method to close dialog
+    closeDialog() {
+        this.currentDialog = null;
+        this.setState('EXPLORING');
     }
 
     checkSaveGame() {

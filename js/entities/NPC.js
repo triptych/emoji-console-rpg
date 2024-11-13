@@ -1,10 +1,11 @@
 class NPC {
-    constructor(x, y, emoji, dialogues) {
+    constructor(x, y, emoji, dialogues, room = 0) {
         this.x = x;
         this.y = y;
         this.emoji = emoji;
         this.name = this.getNameFromEmoji(emoji);
         this.dialogues = dialogues;
+        this.room = room;
         this.width = 16;  // Match game grid
         this.height = 16; // Match game grid
         this.currentDialogueIndex = 0;
@@ -17,7 +18,10 @@ class NPC {
             '👩‍🌾': 'Farmer',
             '🧙‍♂️': 'Wizard',
             '👩‍🍳': 'Chef',
-            '👨‍🏫': 'Teacher'
+            '👨‍🏫': 'Teacher',
+            '👷': 'Builder',
+            '💂': 'Guard',
+            '🧝': 'Elf'
         };
         return emojiNames[emoji] || 'Villager';
     }
@@ -43,7 +47,11 @@ class NPC {
     render(renderer) {
         renderer.ctx.font = '16px serif';
         renderer.ctx.textAlign = 'center';
-        renderer.ctx.fillText(this.emoji, this.x * 16 + 8, this.y * 16 + 16);
+        renderer.ctx.fillText(
+            this.emoji,
+            this.x * 16 + 8,
+            this.y * 16 + 16
+        );
     }
 }
 

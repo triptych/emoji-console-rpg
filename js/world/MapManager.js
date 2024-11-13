@@ -1,136 +1,92 @@
+import { dungeonLevels } from './levels/dungeon.js';
+
 export class MapManager {
     constructor() {
+        this.levels = dungeonLevels;
         this.currentRoom = 0;
-        this.rooms = [
-            // Starting room (forest clearing)
-            [
-                ['🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲'],
-                ['🌲', '🌾', '🌾', '🌺', '🌾', '🌾', '🌺', '🌾', '🌾', '🌲'],
-                ['🌲', '🌾', '🪨', '🌾', '🌾', '🌾', '🌾', '🪨', '🌾', '🌲'],
-                ['🌲', '🌺', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌺', '→'],
-                ['🌲', '🌾', '🌾', '🌾', '🪨', '🌾', '🌾', '🌾', '🌾', '→'],
-                ['🌲', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '→'],
-                ['🌲', '🌺', '🪨', '🌾', '🌾', '🌾', '🌾', '🪨', '🌺', '🌲'],
-                ['🌲', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌲'],
-                ['🌲', '🌾', '🌾', '🌺', '🌾', '🌾', '🌺', '🌾', '🌾', '🌲'],
-                ['🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲']
-            ],
-            // Village area
-            [
-                ['🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲'],
-                ['←', '🌾', '🌾', '🏠', '🌾', '🌾', '🏠', '🌾', '🌾', '→'],
-                ['←', '🌾', '🌺', '🌾', '🌾', '🌾', '🌾', '🌺', '🌾', '→'],
-                ['←', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '→'],
-                ['🌲', '🌾', '🏠', '🌾', '⛲', '🌾', '🌾', '🏠', '🌾', '🌲'],
-                ['🌲', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌲'],
-                ['🌲', '🌾', '🌺', '🌾', '🌾', '🌾', '🌾', '🌺', '🌾', '🌲'],
-                ['🌲', '🌾', '🌾', '🏠', '🌾', '🌾', '🏠', '🌾', '🌾', '🌲'],
-                ['🌲', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌲'],
-                ['🌲', '🌲', '🌲', '🌲', '⬇', '⬇', '🌲', '🌲', '🌲', '🌲']
-            ],
-            // Lake area
-            [
-                ['🌲', '🌲', '🌲', '🌲', '⬆', '⬆', '🌲', '🌲', '🌲', '🌲'],
-                ['🌲', '🌾', '🌾', '💧', '💧', '💧', '💧', '🌾', '🌾', '🌲'],
-                ['🌲', '🌾', '💧', '💧', '💧', '💧', '💧', '💧', '🌾', '🌲'],
-                ['🌲', '💧', '💧', '💧', '🛶', '💧', '💧', '💧', '💧', '🌲'],
-                ['🌲', '💧', '💧', '🛶', '💧', '💧', '🛶', '💧', '💧', '🌲'],
-                ['🌲', '💧', '💧', '💧', '💧', '🛶', '💧', '💧', '💧', '🌲'],
-                ['🌲', '🌾', '💧', '💧', '💧', '💧', '💧', '💧', '🌾', '🌲'],
-                ['🌲', '🌾', '🌾', '💧', '💧', '💧', '💧', '🌾', '🌾', '🌲'],
-                ['🌲', '🌺', '🌾', '🌾', '🌾', '🌾', '🌾', '🌾', '🌺', '🌲'],
-                ['🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲', '🌲']
-            ]
-        ];
+        this.currentLevel = this.levels[this.currentRoom];
+        this.tileSize = 16;
+        this.rooms = this.levels.map(level => level.map);
+    }
+
+    getCurrentLevel() {
+        return this.levels[this.currentRoom];
+    }
+
+    isCollision(x, y) {
+        const gridX = Math.floor(x / this.tileSize);
+        const gridY = Math.floor(y / this.tileSize);
+        return this.isWall(gridX, gridY);
+    }
+
+    isWall(x, y) {
+        const level = this.getCurrentLevel();
+        if (!level.map[y] || !level.map[y][x]) return true;
+        const tile = level.map[y][x];
+        return tile === '⬛' || tile === '🌳' || tile === '🌲';
+    }
+
+    isExit(x, y) {
+        const level = this.getCurrentLevel();
+        return level.exits.some(exit => exit.x === x && exit.y === y);
+    }
+
+    getExitDestination(x, y) {
+        const level = this.getCurrentLevel();
+        const exit = level.exits.find(exit => exit.x === x && exit.y === y);
+        return exit ? exit.toRoom : null;
+    }
+
+    changeRoom(newRoom) {
+        if (newRoom >= 0 && newRoom < this.levels.length) {
+            this.currentRoom = newRoom;
+            this.currentLevel = this.levels[this.currentRoom];
+            return true;
+        }
+        return false;
     }
 
     update(deltaTime) {
-        const playerX = Math.floor(window.game.player.x);
-        const playerY = Math.floor(window.game.player.y);
-        const currentTile = this.rooms[this.currentRoom][playerY][playerX];
-
-        console.log('MapManager update:', {
-            playerX,
-            playerY,
-            currentTile,
-            currentRoom: this.currentRoom
-        });
-
-        // Handle transitions based on current room and position
-        if (this.currentRoom === 0) {
-            // From starting room to village (right)
-            if (playerX >= 8 && currentTile === '→') {  // Changed from 9 to 8
-                console.log('Transitioning: Starting room -> Village');
-                window.game.player.x = 1;
-                this.currentRoom = 1;
-            }
-        }
-        else if (this.currentRoom === 1) {
-            // From village to starting room (left)
-            if (playerX <= 0 && currentTile === '←') {
-                console.log('Transitioning: Village -> Starting room');
-                window.game.player.x = 8;  // Changed from 8 to match right transition
-                this.currentRoom = 0;
-            }
-            // From village to lake (down)
-            else if (playerY >= 8 && currentTile === '⬇') {  // Changed from 9 to 8
-                console.log('Transitioning: Village -> Lake');
-                window.game.player.y = 1;
-                this.currentRoom = 2;
-            }
-        }
-        else if (this.currentRoom === 2) {
-            // From lake to village (up)
-            if (playerY <= 0 && currentTile === '⬆') {
-                console.log('Transitioning: Lake -> Village');
-                window.game.player.y = 8;  // Changed to match down transition
-                this.currentRoom = 1;
+        const player = window.game.player;
+        if (this.isExit(Math.floor(player.x), Math.floor(player.y))) {
+            const newRoom = this.getExitDestination(Math.floor(player.x), Math.floor(player.y));
+            if (newRoom !== null) {
+                this.changeRoom(newRoom);
+                // Adjust player position based on exit location
+                const currentLevel = this.getCurrentLevel();
+                const entranceExit = currentLevel.exits.find(exit => exit.toRoom === this.currentRoom);
+                if (entranceExit) {
+                    player.x = entranceExit.x;
+                    player.y = entranceExit.y - 1; // Move player one tile away from the entrance
+                }
             }
         }
     }
 
     render(renderer) {
-        const currentMap = this.rooms[this.currentRoom];
-        currentMap.forEach((row, y) => {
-            row.forEach((tile, x) => {
-                renderer.drawTile(tile, x, y);
+        const level = this.getCurrentLevel();
+
+        // Draw the map
+        level.map.forEach((row, y) => {
+            [...row].forEach((tile, x) => {
+                if (tile !== '⬜') {
+                    renderer.ctx.font = '16px serif';
+                    renderer.ctx.textAlign = 'center';
+                    renderer.ctx.fillText(
+                        tile,
+                        x * this.tileSize + this.tileSize/2,
+                        y * this.tileSize + this.tileSize
+                    );
+                }
             });
         });
-    }
 
-    getTile(x, y) {
-        const tileX = Math.floor(x / 16);
-        const tileY = Math.floor(y / 16);
-
-        console.log('Getting tile at:', {
-            rawX: x,
-            rawY: y,
-            tileX,
-            tileY,
-            currentRoom: this.currentRoom
-        });
-
-        // Ensure we're within bounds
-        if (tileX >= 0 && tileX < 10 && tileY >= 0 && tileY < 10) {
-            const tile = this.rooms[this.currentRoom][tileY][tileX];
-            console.log('Found tile:', tile);
-            return tile;
-        }
-
-        console.log('Out of bounds, returning tree');
-        return '🌲';
-    }
-
-    isCollision(x, y) {
-        const tile = this.getTile(x, y);
-        // Don't treat transition tiles as collisions
-        const transitionTiles = ['→', '←', '⬆', '⬇'];
-        if (transitionTiles.includes(tile)) {
-            return false;
-        }
-        const solidTiles = ['🌲', '🪨', '🏠', '⛲'];
-        const isBlocked = solidTiles.includes(tile);
-        console.log('Collision check:', { x, y, tile, isBlocked });
-        return isBlocked;
+        // Draw room name
+        renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        renderer.ctx.fillRect(0, 0, 160, 16);
+        renderer.ctx.fillStyle = '#ffffff';
+        renderer.ctx.font = '10px monospace';
+        renderer.ctx.textAlign = 'center';
+        renderer.ctx.fillText(level.name, 80, 12);
     }
 }

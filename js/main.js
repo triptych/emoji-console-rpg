@@ -87,7 +87,8 @@ class Game {
     }
 
     checkNPCCollision = () => {
-        for (let npc of this.gameState.npcs) {
+        const npcsInRoom = this.gameState.getNPCsInCurrentRoom(this.mapManager.currentRoom);
+        for (let npc of npcsInRoom) {
             if (npc.isCollidingWith(this.player)) {
                 this.gameState.showDialog(npc);
                 return true;
@@ -118,15 +119,14 @@ class Game {
         // Update player position
         this.player.update(deltaTime, input);
 
-        // Get the current tile at player's position
-        const currentTile = this.mapManager.rooms[this.mapManager.currentRoom][Math.floor(this.player.y)][Math.floor(this.player.x)];
-        console.log('Current tile:', currentTile, 'at position:', this.player.x, this.player.y);
+        // Check if we're on a door (🚪)
+        const currentLevel = this.mapManager.getCurrentLevel();
+        const playerGridX = Math.floor(this.player.x);
+        const playerGridY = Math.floor(this.player.y);
 
-        // Check if we're on a transition tile
-        const isTransitionTile = ['→', '←', '⬆', '⬇'].includes(currentTile);
-
-        // If we're not on a transition tile and there's a collision, revert movement
-        if (!isTransitionTile && this.mapManager.isCollision(this.player.x * 16, this.player.y * 16)) {
+        // If there's a collision and we're not on an exit, revert movement
+        if (!this.mapManager.isExit(playerGridX, playerGridY) &&
+            this.mapManager.isCollision(this.player.x * 16, this.player.y * 16)) {
             console.log('Collision detected, reverting movement');
             this.player.x = oldX;
             this.player.y = oldY;
@@ -353,8 +353,9 @@ class Game {
             case 'DIALOG':
                 this.mapManager.render(this.renderer);
 
-                // Render NPCs
-                for (let npc of this.gameState.npcs) {
+                // Render NPCs in current room
+                const npcsInRoom = this.gameState.getNPCsInCurrentRoom(this.mapManager.currentRoom);
+                for (let npc of npcsInRoom) {
                     npc.render(this.renderer);
                 }
 

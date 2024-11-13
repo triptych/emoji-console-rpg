@@ -45,36 +45,46 @@ export class MapManager {
     }
 
     update(deltaTime) {
-        // Check for room transitions
         const playerX = Math.floor(window.game.player.x);
         const playerY = Math.floor(window.game.player.y);
+        const currentTile = this.rooms[this.currentRoom][playerY][playerX];
 
-        // Right edge transition
-        if (playerX >= 9 && this.getTile(playerX * 16, playerY * 16) === '→') {
-            if (this.currentRoom < this.rooms.length - 1) {
+        console.log('MapManager update:', {
+            playerX,
+            playerY,
+            currentTile,
+            currentRoom: this.currentRoom
+        });
+
+        // Handle transitions based on current room and position
+        if (this.currentRoom === 0) {
+            // From starting room to village (right)
+            if (playerX >= 8 && currentTile === '→') {  // Changed from 9 to 8
+                console.log('Transitioning: Starting room -> Village');
                 window.game.player.x = 1;
-                this.currentRoom++;
+                this.currentRoom = 1;
             }
         }
-        // Left edge transition
-        else if (playerX <= 0 && this.getTile(playerX * 16, playerY * 16) === '←') {
-            if (this.currentRoom > 0) {
-                window.game.player.x = 8;
-                this.currentRoom--;
+        else if (this.currentRoom === 1) {
+            // From village to starting room (left)
+            if (playerX <= 0 && currentTile === '←') {
+                console.log('Transitioning: Village -> Starting room');
+                window.game.player.x = 8;  // Changed from 8 to match right transition
+                this.currentRoom = 0;
             }
-        }
-        // Down edge transition
-        else if (playerY >= 9 && this.getTile(playerX * 16, playerY * 16) === '⬇') {
-            if (this.currentRoom < this.rooms.length - 1) {
+            // From village to lake (down)
+            else if (playerY >= 8 && currentTile === '⬇') {  // Changed from 9 to 8
+                console.log('Transitioning: Village -> Lake');
                 window.game.player.y = 1;
-                this.currentRoom++;
+                this.currentRoom = 2;
             }
         }
-        // Up edge transition
-        else if (playerY <= 0 && this.getTile(playerX * 16, playerY * 16) === '⬆') {
-            if (this.currentRoom > 0) {
-                window.game.player.y = 8;
-                this.currentRoom--;
+        else if (this.currentRoom === 2) {
+            // From lake to village (up)
+            if (playerY <= 0 && currentTile === '⬆') {
+                console.log('Transitioning: Lake -> Village');
+                window.game.player.y = 8;  // Changed to match down transition
+                this.currentRoom = 1;
             }
         }
     }
@@ -91,17 +101,36 @@ export class MapManager {
     getTile(x, y) {
         const tileX = Math.floor(x / 16);
         const tileY = Math.floor(y / 16);
-        const currentMap = this.rooms[this.currentRoom];
-        if (tileX >= 0 && tileX < currentMap[0].length && tileY >= 0 && tileY < currentMap.length) {
-            return currentMap[tileY][tileX];
+
+        console.log('Getting tile at:', {
+            rawX: x,
+            rawY: y,
+            tileX,
+            tileY,
+            currentRoom: this.currentRoom
+        });
+
+        // Ensure we're within bounds
+        if (tileX >= 0 && tileX < 10 && tileY >= 0 && tileY < 10) {
+            const tile = this.rooms[this.currentRoom][tileY][tileX];
+            console.log('Found tile:', tile);
+            return tile;
         }
-        return '🌲'; // Return tree tile for out of bounds
+
+        console.log('Out of bounds, returning tree');
+        return '🌲';
     }
 
     isCollision(x, y) {
         const tile = this.getTile(x, y);
-        // Define which tiles are solid/impassable - removed '💧' from the list
+        // Don't treat transition tiles as collisions
+        const transitionTiles = ['→', '←', '⬆', '⬇'];
+        if (transitionTiles.includes(tile)) {
+            return false;
+        }
         const solidTiles = ['🌲', '🪨', '🏠', '⛲'];
-        return solidTiles.includes(tile);
+        const isBlocked = solidTiles.includes(tile);
+        console.log('Collision check:', { x, y, tile, isBlocked });
+        return isBlocked;
     }
 }

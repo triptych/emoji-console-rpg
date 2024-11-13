@@ -36,11 +36,15 @@ export class Player {
             if (input.left) newX--;
             if (input.right) newX++;
 
-            // Collision checking would go here
-            this.x = newX;
-            this.y = newY;
+            // Ensure we stay within map bounds
+            newX = Math.max(0, Math.min(9, newX));
+            newY = Math.max(0, Math.min(9, newY));
 
-            if (input.up || input.down || input.left || input.right) {
+            // Only update position and movement timer if we actually moved
+            if (newX !== this.x || newY !== this.y) {
+                console.log('Player moving from:', { x: this.x, y: this.y }, 'to:', { x: newX, y: newY });
+                this.x = newX;
+                this.y = newY;
                 this.lastMove = currentTime;
             }
         }

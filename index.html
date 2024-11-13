@@ -9,7 +9,7 @@
 <body>
     <div class="game-container">
         <div class="game-screen">
-            <canvas id="gameCanvas"></canvas>
+            <canvas id="gameCanvas" tabindex="1" autofocus></canvas>
         </div>
         <div class="controls">
             <div class="d-pad">
@@ -39,6 +39,20 @@
         document.getElementById('error-container').style.display = 'block';
         document.getElementById('error-container').textContent =
             'Your browser does not support JavaScript modules. Please use a modern browser.';
+    </script>
+    <script>
+        // Ensure canvas keeps focus
+        window.addEventListener('load', () => {
+            const canvas = document.getElementById('gameCanvas');
+            canvas.focus();
+
+            // Prevent focus loss when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target !== canvas) {
+                    canvas.focus();
+                }
+            });
+        });
     </script>
 </body>
 </html>
